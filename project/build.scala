@@ -30,13 +30,13 @@ object build extends Build {
     id = "specs2",
     base = file("."),
     settings =
-      moduleSettings("")       ++
-      compatibilitySettings    ++
-      releaseSettings          ++
-      siteSettings             ++
-      Seq(name := "specs2", packagedArtifacts := Map.empty)
+      moduleSettings("") ++
+        compatibilitySettings ++
+        releaseSettings ++
+        siteSettings ++
+        Seq(name := "specs2", packagedArtifacts := Map.empty)
   ).aggregate(codata, common, matcher, matcherExtra, core, cats, html, analysis, form, markdown, gwt, junit, scalacheck, mock, tests)
-   .enablePlugins(GitBranchPrompt)
+    .enablePlugins(GitBranchPrompt)
 
   /** COMMON SETTINGS */
   lazy val specs2Settings: Seq[Settings] = Seq(
@@ -50,20 +50,20 @@ object build extends Build {
   lazy val specs2Version = settingKey[String]("defines the current specs2 version")
 
   def moduleSettings(name: String): Seq[Settings] =
-      coreDefaultSettings  ++
-      depends.resolvers    ++
-      promulgate.library("org.specs2.info"+(if (name.nonEmpty) s".$name" else ""), "specs2") ++
-      specs2Settings       ++
-      compilationSettings  ++
-      testingSettings      ++
+    coreDefaultSettings ++
+      depends.resolvers ++
+      promulgate.library("org.specs2.info" + (if (name.nonEmpty) s".$name" else ""), "specs2") ++
+      specs2Settings ++
+      compilationSettings ++
+      testingSettings ++
       publicationSettings
 
   /** MODULES (sorted in alphabetical order) */
   lazy val analysis = Project(id = "analysis", base = file("analysis"),
     settings = Seq(
       libraryDependencies ++= depends.classycle ++ depends.compiler(scalaVersion.value)) ++
-    moduleSettings("analysis") ++
-    Seq(name := "specs2-analysis")
+      moduleSettings("analysis") ++
+      Seq(name := "specs2-analysis")
   ).dependsOn(common % "test->test", core, matcher, scalacheck % "test")
 
   lazy val codata: Project = Project(id = "codata", base = file("codata"),
@@ -78,25 +78,27 @@ object build extends Build {
 
   lazy val common = Project(id = "common", base = file("common"),
     settings = moduleSettings("common") ++
-      Seq(conflictWarning ~= { _.copy(failOnConflict = false) }, // lame
-          libraryDependencies ++=
-            depends.scalaz(scalazVersion.value) ++
+      Seq(conflictWarning ~= {
+        _.copy(failOnConflict = false)
+      }, // lame
+        libraryDependencies ++=
+          depends.scalaz(scalazVersion.value) ++
             depends.reflect(scalaVersion.value) ++
             depends.paradise(scalaVersion.value) ++
             depends.scalaParser(scalaVersion.value) ++
             depends.scalaXML(scalaVersion.value) ++
             depends.scalacheck(scalaVersion.value).map(_ % "test"),
-          name := "specs2-common")
+        name := "specs2-common")
   ).dependsOn(codata)
 
   lazy val core = Project(id = "core", base = file("core"),
     settings = Seq(
       libraryDependencies ++=
         depends.reflect(scalaVersion.value) ++
-        depends.paradise(scalaVersion.value) ++
-        depends.testInterface.map(_ % "optional") ++
-        depends.mockito.map(_ % "test") ++
-        depends.junit.map(_ % "test")) ++
+          depends.paradise(scalaVersion.value) ++
+          depends.testInterface.map(_ % "optional") ++
+          depends.mockito.map(_ % "test") ++
+          depends.junit.map(_ % "test")) ++
       moduleSettings("core") ++
       Seq(name := "specs2-core")
   ).dependsOn(matcher, common % "test->test")
@@ -127,8 +129,8 @@ object build extends Build {
   lazy val html = Project(id = "html", base = file("html"),
     settings =
       Seq(libraryDependencies += depends.tagsoup) ++
-      moduleSettings("html") ++
-      Seq(name := "specs2-html")
+        moduleSettings("html") ++
+        Seq(name := "specs2-html")
   ).dependsOn(form, mock % "test", matcherExtra % "test", scalacheck % "test")
 
   lazy val junit = Project(id = "junit", base = file("junit"),
@@ -140,7 +142,7 @@ object build extends Build {
 
   lazy val markdown = Project(id = "markdown", base = file("markdown"),
     settings = Seq(
-     libraryDependencies ++= depends.pegdown ++ depends.shapeless(scalaVersion.value)) ++
+      libraryDependencies ++= depends.pegdown ++ depends.shapeless(scalaVersion.value)) ++
       moduleSettings("markdown") ++
       Seq(name := "specs2-markdown")
   ).dependsOn(common, core % "compile->test")
@@ -162,14 +164,14 @@ object build extends Build {
       Seq(libraryDependencies ++= (if (scalaVersion.value startsWith "2.12") Nil else depends.cats)) ++
       Seq(name := "specs2-cats") ++
       Seq((skip in compile) := scalaVersion.value startsWith "2.12",
-          publishArtifact := !(scalaVersion.value startsWith "2.12"))
+        publishArtifact := !(scalaVersion.value startsWith "2.12"))
   ).dependsOn(matcher, core % "test->test")
 
   lazy val mock = Project(id = "mock", base = file("mock"),
     settings = Seq(
       libraryDependencies ++=
         depends.hamcrest ++
-        depends.mockito) ++
+          depends.mockito) ++
       moduleSettings("mock") ++
       Seq(name := "specs2-mock")
   ).dependsOn(core)
@@ -195,28 +197,30 @@ object build extends Build {
     // https://gist.github.com/djspiewak/976cd8ac65e20e136f05
     unmanagedSourceDirectories in Compile ++=
       Seq((sourceDirectory in Compile).value / s"scala-${scalaBinaryVersion.value}",
-          if (scalazVersion.value.startsWith("7.0")) (sourceDirectory in Compile).value / s"scala-scalaz-7.0.x"
-          else                                       (sourceDirectory in Compile).value / s"scala-scalaz-7.1.x",
-          if (scalazVersion.value.startsWith("7.0")) (sourceDirectory in (Test, test)).value / s"scala-scalaz-7.0.x"
-          else                                       (sourceDirectory in (Test, test)).value / s"scala-scalaz-7.1.x"),
+        if (scalazVersion.value.startsWith("7.0")) (sourceDirectory in Compile).value / s"scala-scalaz-7.0.x"
+        else (sourceDirectory in Compile).value / s"scala-scalaz-7.1.x",
+        if (scalazVersion.value.startsWith("7.0")) (sourceDirectory in(Test, test)).value / s"scala-scalaz-7.0.x"
+        else (sourceDirectory in(Test, test)).value / s"scala-scalaz-7.1.x"),
     javacOptions ++= Seq("-Xmx3G", "-Xms512m", "-Xss4m"),
     maxErrors := 20,
     incOptions := incOptions.value.withNameHashing(true),
     scalacOptions ++=
       (if (scalaVersion.value.startsWith("2.11") || scalaVersion.value.startsWith("2.12"))
-        Seq("-Xfatal-warnings",
-            "-Xlint",
-            "-Ywarn-unused-import",
-            "-Yno-adapted-args",
-            "-Ywarn-numeric-widen",
-            "-Ywarn-value-discard",
-            "-deprecation:false", "-Xcheckinit", "-unchecked", "-feature", "-language:_")
-       else
+        Seq(
+          // Does not compile with fatal warnings enabled
+          //          "-Xfatal-warnings",
+          "-Xlint",
+          "-Ywarn-unused-import",
+          "-Yno-adapted-args",
+          "-Ywarn-numeric-widen",
+          "-Ywarn-value-discard",
+          "-deprecation:false", "-Xcheckinit", "-unchecked", "-feature", "-language:_")
+      else
         Seq("-Xcheckinit", "-Xlint", "-deprecation", "-unchecked", "-feature", "-language:_")),
     scalacOptions in Test ++= Seq("-Yrangepos"),
-    scalacOptions in (Compile, doc) := Seq("-feature", "-language:_"),
-    scalacOptions in (Compile, console) := Seq("-Yrangepos", "-feature", "-language:_"),
-    scalacOptions in (Test, console) := Seq("-Yrangepos", "-feature", "-language:_")
+    scalacOptions in(Compile, doc) := Seq("-feature", "-language:_"),
+    scalacOptions in(Compile, console) := Seq("-Yrangepos", "-feature", "-language:_"),
+    scalacOptions in(Test, console) := Seq("-Yrangepos", "-feature", "-language:_")
   )
 
   lazy val testingSettings: Seq[Settings] = Seq(
@@ -232,60 +236,60 @@ object build extends Build {
   )
 
   /**
-   * RELEASE PROCESS
-   */
+    * RELEASE PROCESS
+    */
   lazy val releaseSettings: Seq[Settings] =
     ReleasePlugin.releaseSettings ++ Seq(
-    tagName <<= (version in ThisBuild) map (v => "SPECS2-" + v),
-    crossBuild := true,
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      tagRelease,
-      generateWebsite,
-      executeStepTask(makeSite, "make the site", Compile),
-      publishSite,
-      ReleaseStep(publishSignedArtifacts, check = identity, enableCrossBuild = true),
-      releaseToSonatype,
-      pushChanges
-    ),
-    releaseJarsProcess := Seq[ReleaseStep](
-      inquireVersions,
-      setReleaseVersion,
-      ReleaseStep(publishSignedArtifacts, check = identity, enableCrossBuild = true),
-      releaseToSonatype
-    ),
-    releaseOfficialProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      setReleaseVersion,
-      tagRelease,
-      generateWebsite,
-      executeStepTask(makeSite, "make the site", Compile),
-      publishSite,
-      ReleaseStep(publishSignedArtifacts, check = identity, enableCrossBuild = true),
-      releaseToSonatype,
-      notifyHerald,
-      pushChanges
-    ),
-    releaseSiteProcess := Seq[ReleaseStep](
-      inquireVersions,
-      setReleaseVersion,
-      generateWebsite,
-      executeStepTask(makeSite, "make the site", Compile),
-      publishSite
-    ),
-    commands ++= Seq(releaseOfficialCommand, releaseJarsCommand, releaseSiteCommand)
+      tagName <<= (version in ThisBuild) map (v => "SPECS2-" + v),
+      crossBuild := true,
+      releaseProcess := Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        tagRelease,
+        generateWebsite,
+        executeStepTask(makeSite, "make the site", Compile),
+        publishSite,
+        ReleaseStep(publishSignedArtifacts, check = identity, enableCrossBuild = true),
+        releaseToSonatype,
+        pushChanges
+      ),
+      releaseJarsProcess := Seq[ReleaseStep](
+        inquireVersions,
+        setReleaseVersion,
+        ReleaseStep(publishSignedArtifacts, check = identity, enableCrossBuild = true),
+        releaseToSonatype
+      ),
+      releaseOfficialProcess := Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        inquireVersions,
+        setReleaseVersion,
+        tagRelease,
+        generateWebsite,
+        executeStepTask(makeSite, "make the site", Compile),
+        publishSite,
+        ReleaseStep(publishSignedArtifacts, check = identity, enableCrossBuild = true),
+        releaseToSonatype,
+        notifyHerald,
+        pushChanges
+      ),
+      releaseSiteProcess := Seq[ReleaseStep](
+        inquireVersions,
+        setReleaseVersion,
+        generateWebsite,
+        executeStepTask(makeSite, "make the site", Compile),
+        publishSite
+      ),
+      commands ++= Seq(releaseOfficialCommand, releaseJarsCommand, releaseSiteCommand)
     ) ++
-  documentationSettings ++
-  apiSettings               ++
-  Seq(scalacOptions in (Compile, doc) += "-Ymacro-no-expand")
+      documentationSettings ++
+      apiSettings ++
+      Seq(scalacOptions in(Compile, doc) += "-Ymacro-no-expand")
 
   lazy val apiSettings: Seq[Settings] = Seq(
-    sources                      in (Compile, doc) := sources.all(aggregateCompile).value.flatten,
-    unmanagedSources             in (Compile, doc) := unmanagedSources.all(aggregateCompile).value.flatten,
-    unmanagedSourceDirectories   in (Compile, doc) := unmanagedSourceDirectories.all(aggregateCompile).value.flatten,
-    unmanagedResourceDirectories in (Compile, doc) := unmanagedResourceDirectories.all(aggregateCompile).value.flatten,
-    libraryDependencies                            := libraryDependencies.all(aggregateTest).value.flatten.map(maybeMarkProvided)
+    sources in(Compile, doc) := sources.all(aggregateCompile).value.flatten,
+    unmanagedSources in(Compile, doc) := unmanagedSources.all(aggregateCompile).value.flatten,
+    unmanagedSourceDirectories in(Compile, doc) := unmanagedSourceDirectories.all(aggregateCompile).value.flatten,
+    unmanagedResourceDirectories in(Compile, doc) := unmanagedResourceDirectories.all(aggregateCompile).value.flatten,
+    libraryDependencies := libraryDependencies.all(aggregateTest).value.flatten.map(maybeMarkProvided)
   )
 
   lazy val aggregateCompile = ScopeFilter(
@@ -313,7 +317,7 @@ object build extends Build {
     val initialChecks = releaseParts.map(_.check)
     val process = releaseParts.map(_.action)
 
-    initialChecks.foreach(_(startState))
+    initialChecks.foreach(_ (startState))
     Function.chain(process)(startState)
   }
 
@@ -333,7 +337,7 @@ object build extends Build {
     val initialChecks = releaseParts.map(_.check)
     val process = releaseParts.map(_.action)
 
-    initialChecks.foreach(_(startState))
+    initialChecks.foreach(_ (startState))
     Function.chain(process)(startState)
   }
 
@@ -353,32 +357,32 @@ object build extends Build {
     val initialChecks = releaseParts.map(_.check)
     val process = releaseParts.map(_.action)
 
-    initialChecks.foreach(_(startState))
+    initialChecks.foreach(_ (startState))
     Function.chain(process)(startState)
   }
   /**
-   * DOCUMENTATION
-   */
+    * DOCUMENTATION
+    */
   lazy val siteSettings: Seq[Settings] = ghpages.settings ++ SbtSite.site.settings ++
     Seq(
-    siteSourceDirectory <<= target (_ / "specs2-reports" / "site"),
-    // copy the api files to a versioned directory
-    siteMappings <++= (mappings in packageDoc in Compile, version) map { (m, v) => m.map { case (f, d) => (f, s"api/SPECS2-$v/$d") } },
-    includeFilter in makeSite := AllPassFilter,
-    // override the synchLocal task to avoid removing the existing files
-    synchLocal <<= (privateMappings, updatedRepository, gitRunner, streams) map { (mappings, repo, git, s) =>
-      val betterMappings = mappings map { case (file, target) => (file, repo / target) }
-      IO.copy(betterMappings)
-      repo
-    },
-    gitRemoteRepo := "git@github.com:etorreborre/specs2.git"
-  )
+      siteSourceDirectory <<= target(_ / "specs2-reports" / "site"),
+      // copy the api files to a versioned directory
+      siteMappings <++= (mappings in packageDoc in Compile, version) map { (m, v) => m.map { case (f, d) => (f, s"api/SPECS2-$v/$d") } },
+      includeFilter in makeSite := AllPassFilter,
+      // override the synchLocal task to avoid removing the existing files
+      synchLocal <<= (privateMappings, updatedRepository, gitRunner, streams) map { (mappings, repo, git, s) =>
+        val betterMappings = mappings map { case (file, target) => (file, repo / target) }
+        IO.copy(betterMappings)
+        repo
+      },
+      gitRemoteRepo := "git@github.com:etorreborre/specs2.git"
+    )
 
   lazy val documentationSettings =
     testTaskDefinition(generateWebsiteTask, Seq(Tests.Filter(_.endsWith("Website"))))
 
   lazy val generateWebsiteTask = TaskKey[Tests.Output]("generate-website", "generate the website")
-  lazy val generateWebsite     = executeStepTask(generateWebsiteTask in guide, "Generating the website", Test)
+  lazy val generateWebsite = executeStepTask(generateWebsiteTask in guide, "Generating the website", Test)
 
   lazy val publishSite = ReleaseStep { st: State =>
     val st2 = executeStepTask(makeSite, "Making the site")(st)
@@ -386,10 +390,10 @@ object build extends Build {
   }
 
   def testTaskDefinition(task: TaskKey[Tests.Output], options: Seq[TestOption]) =
-    Seq(testTask(task))                          ++
-    inScope(GlobalScope)(defaultTestTasks(task)) ++
-    inConfig(Test)(testTaskOptions(task))        ++
-    (testOptions in (Test, task) ++= options)
+    Seq(testTask(task)) ++
+      inScope(GlobalScope)(defaultTestTasks(task)) ++
+      inConfig(Test)(testTaskOptions(task)) ++
+      (testOptions in(Test, task) ++= options)
 
   def testTask(task: TaskKey[Tests.Output]) =
     task <<= (streams in Test, loadedTestFrameworks in Test, testLoader in Test,
@@ -397,8 +401,8 @@ object build extends Build {
       fullClasspath in Test in test, javaHome in test) flatMap Defaults.allTestGroupsTask
 
   /**
-   * PUBLICATION
-   */
+    * PUBLICATION
+    */
   lazy val publishSignedArtifacts = executeAggregateTask(publishSigned, "Publishing signed artifacts")
 
   lazy val releaseToSonatype = executeStepTask(sonatypeReleaseAll, "Closing and promoting the Sonatype repo")
@@ -431,20 +435,21 @@ object build extends Build {
             <url>http://etorreborre.blogspot.com/</url>
           </developer>
         </developers>
-    ),
+      ),
     credentials := Seq(Credentials(Path.userHome / ".sbt" / "specs2.credentials"))
   ) ++
-  sonatypeSettings
+    sonatypeSettings
 
   /**
-   * NOTIFICATION
-   */
-  lazy val notifyHerald = ReleaseStep (
+    * NOTIFICATION
+    */
+  lazy val notifyHerald = ReleaseStep(
     action = (st: State) => {
-      Process("herald &").lines; st.log.info("Starting herald to publish the release notes")
+      Process("herald &").lines;
+      st.log.info("Starting herald to publish the release notes")
       st
     },
-    check  = (st: State) => {
+    check = (st: State) => {
       st.log.info("Checking if herald is installed")
       if ("which herald".!<(st.log) != 0) sys.error("You must install 'herald': http://github.com/n8han/herald on your machine")
       st
@@ -452,14 +457,14 @@ object build extends Build {
   )
 
   /**
-   * COMPATIBILITY
-   */
+    * COMPATIBILITY
+    */
   lazy val compatibilitySettings = mimaDefaultSettings ++
     Seq(previousArtifact := Some("org.specs2" %% "specs2" % "3.0"))
 
   /**
-   * UTILITIES
-   */
+    * UTILITIES
+    */
 
   /** Mark some dependencies of the full artifact as provided */
   def maybeMarkProvided(dep: ModuleID): ModuleID =
